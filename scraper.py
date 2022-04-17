@@ -1,9 +1,13 @@
 import re
 from urllib.parse import urlparse
+from bs4 import BeautifulSoup
+
+DEBUG = False
 
 def scraper(url, resp):
     links = extract_next_links(url, resp)
-    return [link for link in links if is_valid(link)]
+    valid_links = [link for link in links if is_valid(link)]
+    return []
 
 def extract_next_links(url, resp):
     # Implementation required.
@@ -15,12 +19,79 @@ def extract_next_links(url, resp):
     #         resp.raw_response.url: the url, again
     #         resp.raw_response.content: the content of the page!
     # Return a list with the hyperlinks (as strings) scrapped from resp.raw_response.content
-    return list()
+    
+    if resp.status != 200:
+        return []
+
+    parsed_url = urlparse(resp.url)
+    
+    # get all links from html page
+    links = []
+    soup = BeautifulSoup(resp.raw_response.content, 'html.parser')
+    
+    # convert to absolute
+    # determine if link is relative (attach current URL) or absolute (leave as is)
+    for link in set(soup.find_all('a')):
+       
+        href = link.get('href')
+        
+        abs_link = ''
+        
+        # eliminate '/' and fragments
+        if (not href or len(href) <= 1 or href[0] == '#'):
+            continue
+            
+        if (href.startswith('mailto')):
+            continue
+        
+        if DEBUG:
+            print(href)
+            
+        # same scheme but different domain
+        if (href.startswith('//')):
+            abs_link = f'{parsed_url.scheme}://{href}'
+        
+        # going up directories
+        elif (href.startswith('..')):
+            up_dire_count = href.count('..')
+            href_match = re.search(r"(../)+(.*)")
+            paths = parsed_url.path.split('/')
+            parent = f'{parsed_url.scheme}://{parsed_url.netloc}'
+            
+            # goes up too many directories
+            if up_dire_count >= len(paths):
+                abs_link = parent
+            else:
+                abs_link = f"{parent}/{'/'.join(paths[:-up_dire_count])}/{href_match.group(2)}"
+        
+        # different domain
+        elif (href.startswith('http')):
+            abs_link = href
+        
+        # relative url
+        # check if href has /
+        elif (href.startswith('/')):
+            abs_link = resp.url + href
+        else:
+            abs_link = f"{resp.url}/{href}"
+        
+        # remove fragments if any
+        final_link = urlparse(abs_link)._replace(fragment="").geturl()
+        links.append(final_link)
+        
+        if DEBUG:
+            print('======================== FINAL LINK:', final_link)
+        
+    return links
 
 def is_valid(url):
     # Decide whether to crawl this url or not. 
     # If you decide to crawl it, return True; otherwise return False.
     # There are already some conditions that return False.
+    
+    # check if URL has been crawled
+    # check if within allowed domains
+    # check for traps
     try:
         parsed = urlparse(url)
         if parsed.scheme not in set(["http", "https"]):
