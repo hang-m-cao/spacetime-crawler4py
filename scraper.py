@@ -1,13 +1,23 @@
 import re
+from crawler_data import Crawler_Data
 from urllib.parse import urlparse
 from bs4 import BeautifulSoup
 
-DEBUG = False
+DEBUG = True
+
+CRAWLER_DATA = Crawler_Data()
+#COUNT = 0
 
 def scraper(url, resp):
+    
     links = extract_next_links(url, resp)
     valid_links = [link for link in links if is_valid(link)]
-    return []
+    
+    # for link in valid_links:
+    #     print(link)
+
+    CRAWLER_DATA.print_visited_pages()
+    return [] # change to valid links to crawl
 
 def extract_next_links(url, resp):
     # Implementation required.
@@ -29,6 +39,9 @@ def extract_next_links(url, resp):
     links = []
     soup = BeautifulSoup(resp.raw_response.content, 'html.parser')
     
+    #--------------------- COMMENTED OUT TEMPORARILY
+    CRAWLER_DATA.analyze(url, soup)
+    
     # convert to absolute
     # determine if link is relative (attach current URL) or absolute (leave as is)
     for link in set(soup.find_all('a')):
@@ -44,8 +57,8 @@ def extract_next_links(url, resp):
         if (href.startswith('mailto')):
             continue
         
-        if DEBUG:
-            print(href)
+        # if DEBUG:
+        #     print(href)
             
         # same scheme but different domain
         if (href.startswith('//')):
@@ -79,9 +92,12 @@ def extract_next_links(url, resp):
         final_link = urlparse(abs_link)._replace(fragment="").geturl()
         links.append(final_link)
         
-        if DEBUG:
-            print('======================== FINAL LINK:', final_link)
+#         if DEBUG:
+#             print('======================== FINAL LINK:', final_link)
         
+    #------------------DELETE
+    links.append('https://today.uci.edu/department/information_computer_sciences/')
+    
     return links
 
 def is_valid(url):
@@ -93,10 +109,19 @@ def is_valid(url):
     # check if within allowed domains
     # check for traps
     try:
+        
         parsed = urlparse(url)
         if parsed.scheme not in set(["http", "https"]):
             return False
-        return not re.match(
+        
+        if not re.match(r"((.*\.)*ics\.uci\.edu.*)|"
+                        + r"((.*\.)*cs\.uci\.edu.*)|"
+                        + r"((.*\.)*informatics\.uci\.edu.*)|"
+                        + r"((.*\.)*stat\.uci\.edu.*)|" 
+                        + r"(today\.uci\.edu\/department\/information_computer_sciences\/.*)",
+                       parsed.netloc + parsed.path):
+            return False
+        if re.match(
             r".*\.(css|js|bmp|gif|jpe?g|ico"
             + r"|png|tiff?|mid|mp2|mp3|mp4"
             + r"|wav|avi|mov|mpeg|ram|m4v|mkv|ogg|ogv|pdf"
@@ -104,7 +129,14 @@ def is_valid(url):
             + r"|data|dat|exe|bz2|tar|msi|bin|7z|psd|dmg|iso"
             + r"|epub|dll|cnf|tgz|sha1"
             + r"|thmx|mso|arff|rtf|jar|csv"
-            + r"|rm|smil|wmv|swf|wma|zip|rar|gz)$", parsed.path.lower())
+            + r"|rm|smil|wmv|swf|wma|zip|rar|gz)$", parsed.path.lower()):
+            return False
+        
+    
+        if CRAWLER_DATA.visited_page(url):
+            return False
+        
+        return True
 
     except TypeError:
         print ("TypeError for ", parsed)
