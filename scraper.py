@@ -17,7 +17,7 @@ def scraper(url, resp):
     #     print(link)
 
     CRAWLER_DATA.print_visited_pages()
-    return [] # change to valid links to crawl
+    return valid_links # change to valid links to crawl
 
 def extract_next_links(url, resp):
     # Implementation required.
@@ -30,13 +30,13 @@ def extract_next_links(url, resp):
     #         resp.raw_response.content: the content of the page!
     # Return a list with the hyperlinks (as strings) scrapped from resp.raw_response.content
     
-    if resp.status != 200:
+    if resp.status != 200 or resp.raw_response == None:
         return []
 
     parsed_url = urlparse(resp.url)
     
     # get all links from html page
-    links = []
+    links = set()
     soup = BeautifulSoup(resp.raw_response.content, 'html.parser')
     
     #--------------------- COMMENTED OUT TEMPORARILY
@@ -66,37 +66,50 @@ def extract_next_links(url, resp):
         
         # going up directories
         elif (href.startswith('..')):
-            up_dire_count = href.count('..')
-            href_match = re.search(r"(../)+(.*)")
-            paths = parsed_url.path.split('/')
-            parent = f'{parsed_url.scheme}://{parsed_url.netloc}'
+#             up_dire_count = href.count('..')
+#             href_match = re.search(r"(../)+(.*)")
+#             paths = parsed_url.path.split('/')
+#             parent = f'{parsed_url.scheme}://{parsed_url.netloc}'
             
-            # goes up too many directories
-            if up_dire_count >= len(paths):
-                abs_link = parent
-            else:
-                abs_link = f"{parent}/{'/'.join(paths[:-up_dire_count])}/{href_match.group(2)}"
+#             # goes up too many directories
+#             if up_dire_count >= len(paths):
+#                 abs_link = parent
+#             else:
+#                 abs_link = f"{parent}/{'/'.join(paths[:-up_dire_count])}/{href_match.group(2)}"
+
+            continue
         
         # different domain
         elif (href.startswith('http')):
             abs_link = href
         
         # relative url
-        # check if href has /
+        # check if href has /, it means its a different path with same domain
+        
         elif (href.startswith('/')):
-            abs_link = resp.url + href
+            
+            #if href is current path, then we continue to the loop
+            if parsed_url.path.find(href) != -1:
+                continue
+
+            abs_link = f'{parsed_url.scheme}://{parsed_url.netloc}{href}'
         else:
-            abs_link = f"{resp.url}/{href}"
+            #need to check if current path is a file
+            if "." in parsed_url.path:
+                new_path = "/".join(parsed_url.path.split("/")[:-1]) + "/" +  href
+                abs_link = f'{parsed_url.scheme}://{parsed_url.netloc}/{new_path}'
+                
+            else:
+                abs_link = f"{resp.url}/{href}"
         
         # remove fragments if any
         final_link = urlparse(abs_link)._replace(fragment="").geturl()
-        links.append(final_link)
+        
+        #if final_link != resp.url:
+        links.add(final_link)
         
 #         if DEBUG:
 #             print('======================== FINAL LINK:', final_link)
-        
-    #------------------DELETE
-    links.append('https://today.uci.edu/department/information_computer_sciences/')
     
     return links
 
@@ -132,7 +145,11 @@ def is_valid(url):
             + r"|rm|smil|wmv|swf|wma|zip|rar|gz)$", parsed.path.lower()):
             return False
         
-    
+        #check for infinite url trap
+        #source:https://support.archive-it.org/hc/en-us/articles/208332963-Modify-your-crawl-scope-with-a-Regular-Expression
+        if re.match(r"^.*?(\/.+?\/).*?\1.*$|^.*?\/(.+?\/)\2.*$", url.lower()):
+            return False
+        
         if CRAWLER_DATA.visited_page(url):
             return False
         

@@ -3,6 +3,8 @@ import nltk
 from urllib.parse import urlparse
 from collections import defaultdict
 
+#nltk.download('punkt')
+
 STOPWORDS = set()
 with open('stopwords.txt', 'r') as file:
     # source: https://stackoverflow.com/questions/12330522/how-to-read-a-file-without-newlines
@@ -52,10 +54,10 @@ class Crawler_Data:
     def print_visited_pages(self):
         print(f'unique pages:{len(self.visited_pages)}')
         print(f'longest page:{self.longest_page}')
-        print(self.words)
+        #print(self.words)
         sorted_words = sorted(self.words, key=lambda w: -self.words[w])[:50]
-        print(sorted_words)
-        print(self.subdomains)
+        print(f'sorted words: {sorted_words}')
+        print(f'subdomains: {self.subdomains}')
         
         
         
