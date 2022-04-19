@@ -46,8 +46,8 @@ def extract_next_links(url, resp):
     for link in set(soup.find_all('a')):
        
         href = link.get('href')
-        print(f"url: {url}")
-        print("href:", href)
+        # print(f"url: {url}")
+        # print("href:", href)
         
         abs_link = ''
         
@@ -110,7 +110,7 @@ def extract_next_links(url, resp):
         if is_valid(final_link):
             links.add(final_link)
             
-        print()
+        # print()
         
 #         if DEBUG:
 #             print('======================== FINAL LINK:', final_link)

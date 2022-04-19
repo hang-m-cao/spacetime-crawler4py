@@ -40,14 +40,19 @@ class Crawler_Data:
             
         # update word dictionary
         for token in text_tokens:
+            # Add each lower case version of the tokens into the tokens list
             token = token.lower()
-            if token not in STOPWORDS and len(token) > 1:
-                self.words[token] += 1
+            # Find all the tokens within a word
+            t = re.findall("[a-zA-Z0-9]+", token)
+            for token in t:
+                if token not in STOPWORDS and len(token) > 1:
+                    # tokens.append(token)
+                    self.words[token] += 1
             
         # update ics.uci.edu subdomain count
         parsed = urlparse(url)
         
-        if re.match(r"((.*\.)*ics\.uci\.edu.*)", parsed.netloc):
+        if re.match(r"((.*\.)*ics\.uci\.edu.*)", parsed.netloc) and parsed.path:
             self.subdomains[parsed.netloc].add(parsed.path)
         
     
