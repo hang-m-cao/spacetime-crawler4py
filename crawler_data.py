@@ -3,7 +3,7 @@ import nltk
 from urllib.parse import urlparse
 from collections import defaultdict
 
-#nltk.download('punkt')
+# nltk.download('punkt')
 
 STOPWORDS = set()
 with open('stopwords.txt', 'r') as file:
