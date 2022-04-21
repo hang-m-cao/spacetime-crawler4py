@@ -9,8 +9,6 @@ from crawler_data import Crawler_Data
 
 
 def main(config_file, restart):
-    
-    #we added
     CRAWLER_DATA = Crawler_Data()
     
     cparser = ConfigParser()
@@ -18,7 +16,6 @@ def main(config_file, restart):
     config = Config(cparser)
     config.cache_server = get_cache_server(config, restart)
     crawler = Crawler(config, restart, CRAWLER_DATA)
-    #crawler = Crawler(config, restart)
     crawler.start()
     CRAWLER_DATA.print_visited_pages()
 
