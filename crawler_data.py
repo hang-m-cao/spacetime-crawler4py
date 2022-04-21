@@ -76,23 +76,25 @@ class Crawler_Data:
         if re.match(r"((.*\.)*ics\.uci\.edu.*)", parsed.netloc) and parsed.path:
             self.subdomains[parsed.netloc].add(parsed.path)
             
+            
         return True
         
     
     def print_visited_pages(self):
         print(f'unique pages:{len(self.visited_pages)}\n')
-        '''
+        
         print(f'longest page:{self.longest_page}\n')
         #print(self.words)
-        sorted_words = sorted(self.words, key=lambda w: -self.words[w])[:50]
-        print(f'sorted words: {sorted_words}\n')
-        print(f'subdomains: {self.subdomains}\n')
+        #sorted_words = sorted(self.words, key=lambda w: -self.words[w])[:50]
+        #print(f'sorted words: {sorted_words}\n')
+        #print(f'subdomains: {self.subdomains}\n')
         
         #============I added here
         subdomain_tuples = sorted([(key, len(self.subdomains[key])) for key in self.subdomains], key = lambda x : x)
         
         print(f'tuples of subdomains and number: {subdomain_tuples}\n')
-        '''
+    
+        
         
         
     def calculate_similarity(self, num1, num2):

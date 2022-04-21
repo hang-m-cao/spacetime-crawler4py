@@ -8,10 +8,11 @@ from utils import get_logger, get_urlhash, normalize
 from scraper import is_valid
 
 class Frontier(object):
-    def __init__(self, config, restart):
+    def __init__(self, config, restart, crawler_data):
         self.logger = get_logger("FRONTIER")
         self.config = config
         self.to_be_downloaded = list()
+        self.crawler_data = crawler_data;
         
         if not os.path.exists(self.config.save_file) and not restart:
             # Save file does not exist, but request to load save.
@@ -40,7 +41,7 @@ class Frontier(object):
         total_count = len(self.save)
         tbd_count = 0
         for url, completed in self.save.values():
-            if not completed and is_valid(url):
+            if not completed and is_valid(url, self.crawler_data):
                 self.to_be_downloaded.append(url)
                 tbd_count += 1
         self.logger.info(

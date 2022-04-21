@@ -16,7 +16,7 @@ def scraper(url, resp, crawler_data):
     
     # for link in valid_links:
     #     print(link)
-    #CRAWLER_DATA.print_visited_pages()
+    crawler_data.print_visited_pages()
     return links # change to valid links to crawl
 
 def extract_next_links(url, resp, crawler_data):
