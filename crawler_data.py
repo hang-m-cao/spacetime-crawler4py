@@ -76,8 +76,8 @@ class Crawler_Data:
         return True
         
     def print_visited_pages(self):
-        print(f'unique pages:{len(self.visited_pages)}\n')
-        print(f'longest page:{self.longest_page}\n')
+        print(f'unique pages: {len(self.visited_pages)}')
+        print(f'longest page: {self.longest_page}')
         #print(self.words)
         #sorted_words = sorted(self.words, key=lambda w: -self.words[w])[:50]
         #print(f'sorted words: {sorted_words}\n')
