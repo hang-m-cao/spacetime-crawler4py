@@ -3,22 +3,23 @@ from crawler_data import Crawler_Data
 from urllib.parse import urlparse, urljoin
 from bs4 import BeautifulSoup
 
+
 DEBUG = True
 
-CRAWLER_DATA = Crawler_Data()
+#CRAWLER_DATA = Crawler_Data()
 #COUNT = 0
 
-def scraper(url, resp):
+def scraper(url, resp, crawler_data):
     
-    links = extract_next_links(url, resp)
+    links = extract_next_links(url, resp, crawler_data)
     # valid_links = [link for link in links if is_valid(link)]
     
     # for link in valid_links:
     #     print(link)
-    CRAWLER_DATA.print_visited_pages()
+    #CRAWLER_DATA.print_visited_pages()
     return links # change to valid links to crawl
 
-def extract_next_links(url, resp):
+def extract_next_links(url, resp, crawler_data):
     # Implementation required.
     # url: the URL that was used to get the page
     # resp.url: the actual url of the page
@@ -39,12 +40,13 @@ def extract_next_links(url, resp):
     soup = BeautifulSoup(resp.raw_response.content, 'html.parser')
     
     #--------------------- COMMENTED OUT TEMPORARILY
-    CRAWLER_DATA.analyze(url, soup)
+    if not crawler_data.analyze(url, soup):
+        return []
     
     # convert to absolute
     # determine if link is relative (attach current URL) or absolute (leave as is)
     for link in set(soup.find_all('a')):
-       
+
         href = link.get('href')
         # print(f"url: {url}")
         # print("href:", href)
@@ -107,7 +109,7 @@ def extract_next_links(url, resp):
         # remove fragments if any
         final_link = urlparse(abs_link)._replace(fragment="").geturl()
         
-        if is_valid(final_link):
+        if is_valid(final_link, crawler_data):
             links.add(final_link)
             
         # print()
@@ -116,7 +118,7 @@ def extract_next_links(url, resp):
 #             print('======================== FINAL LINK:', final_link)
     return links
 
-def is_valid(url):
+def is_valid(url, CRAWLER_DATA):
     # Decide whether to crawl this url or not. 
     # If you decide to crawl it, return True; otherwise return False.
     # There are already some conditions that return False.
@@ -127,6 +129,10 @@ def is_valid(url):
     try:
         
         parsed = urlparse(url)
+        
+        if re.match(r"&?(ical=|share=|api=|replytocom=)", parsed.query):
+            return False
+    
         if parsed.scheme not in set(["http", "https"]):
             return False
         
