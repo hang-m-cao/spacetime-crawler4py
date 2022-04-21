@@ -5,8 +5,11 @@ from bs4 import BeautifulSoup
 
 def scraper(url, resp, crawler_data):
     links = extract_next_links(url, resp, crawler_data)
+    
+    # for testing purposes
     print(resp.url)
     crawler_data.print_visited_pages()
+    
     return links
 
 def extract_next_links(url, resp, crawler_data):

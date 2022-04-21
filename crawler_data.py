@@ -76,20 +76,23 @@ class Crawler_Data:
         return True
         
     def print_visited_pages(self):
-        print(f'unique pages:{len(self.visited_pages)}')
-        '''
-        print(f'longest page:{self.longest_page}')
-        sorted_words = sorted(self.words, key=lambda w: -self.words[w])[:50]
-        print(f'sorted words: {sorted_words}')
+        print(f'unique pages:{len(self.visited_pages)}\n')
+        print(f'longest page:{self.longest_page}\n')
+        #print(self.words)
+        #sorted_words = sorted(self.words, key=lambda w: -self.words[w])[:50]
+        #print(f'sorted words: {sorted_words}\n')
+        #print(f'subdomains: {self.subdomains}\n')
         subdomain_tuples = sorted([(key, len(self.subdomains[key])) for key in self.subdomains], key = lambda x : x)
         print(f'tuples of subdomains and number: {subdomain_tuples}\n')
-        '''
+
     
     # calculate similarity percentage between two given decimal numbers
     # based on how many bits they have in the same position
     def calculate_similarity(self, num1, num2):
-        n = 0 # total number of bits
-        count = 0 # count of bits in the same position
+        # total number of bits
+        n = 0 
+        # count of bits in the same position
+        count = 0 
         
         while (num1 or num2):
             # if both ends are equal to each other
