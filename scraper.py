@@ -45,11 +45,13 @@ def extract_next_links(url, resp, crawler_data):
             
         if (href.startswith('mailto')):
             continue
+            
+        # Determines if we should be looking for a file in the current directory or add on to the directory
+        if "." not in parsed_url.path and url[-1] != '/':
+            url += '/'
         
         # join to convert to absolute
         # determine if link is relative (attach current URL) or absolute (leave as is)
-        if url[-1] != '/':
-            url += '/'
         abs_link = urljoin(url, href)
         
         # remove fragments if any
