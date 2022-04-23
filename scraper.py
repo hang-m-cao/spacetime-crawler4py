@@ -32,7 +32,11 @@ def extract_next_links(url, resp, crawler_data):
     
     for link in set(soup.find_all('a')):
 
-        href = link.get('href')  
+        href = link.get('href')
+        rel = link.get('rel')
+        
+        if rel in ["nofollow", "canonical"]:
+            continue
         
         # eliminate '/' and fragments
         if (not href or len(href) <= 1 or href[0] == '#'):
@@ -82,7 +86,7 @@ def is_valid(url, crawler_data):
         
         if re.match(
             r".*\.(css|js|bmp|gif|jpe?g|ico|img|war"
-            + r"|png|tiff?|mid|mp2|mp3|mp4"
+            + r"|png|tiff?|mid|mp2|mp3|mp4|mpg"
             + r"|wav|avi|mov|mpeg|ram|m4v|mkv|ogg|ogv|pdf"
             + r"|ps|eps|tex|ppt|pptx|doc|docx|xls|xlsx|names"
             + r"|data|dat|exe|bz2|tar|msi|bin|7z|psd|dmg|iso"

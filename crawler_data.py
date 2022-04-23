@@ -31,6 +31,7 @@ class Crawler_Data:
         
         hash_val = Simhash(soup.get_text()).value
         
+
         # get queue from pickle
         self.hash_queue = self.load_pickle('hash_queue.p', self.hash_queue)
         
@@ -54,6 +55,13 @@ class Crawler_Data:
         # tokenize the page
         text_tokens = nltk.tokenize.word_tokenize(soup.get_text())
         
+
+        text_length = len(text_tokens) 
+        
+        # check content length if too big or too small skip
+        if text_length > 1000 or text_length < 20:
+            return False
+         
         # get longest page from pickle
         self.longest_page = self.load_pickle('longest_page.p', self.longest_page)
         
@@ -89,6 +97,7 @@ class Crawler_Data:
             # get subdomains from pickle
             self.subdomains = self.load_pickle('subdomains.p', self.subdomains)
             self.subdomains[parsed.netloc].add(parsed.path)
+
             self.dump_pickle('subdomains.p', self.subdomains)
         
         with open("data/finalLink.txt", "a") as f:
@@ -125,15 +134,15 @@ class Crawler_Data:
 
     # calculate similarity percentage between two given decimal numbers
     # based on how many bits they have in the same position
+
     def calculate_similarity(self, num1, num2):
-        # total number of bits
-        n = 0 
-        # count of bits in the same position
-        count = 0 
+        #calculate similarity percentage
         
+        n = 0
+        count = 0
         while (num1 or num2):
-            # if both ends are equal to each other
-            # &1 returns a 1 if the last bit is 1 and returns 0 if last bit is 0
+            #if both ends are equal to each other
+            #&1 returns a 1 if the last bit is 1 and returns 0 if last bit is 0
             if num1&1 == num2&1:
                 count += 1
             num1 >>= 1
