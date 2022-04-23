@@ -5,11 +5,6 @@ from bs4 import BeautifulSoup
 
 def scraper(url, resp, crawler_data):
     links = extract_next_links(url, resp, crawler_data)
-    
-    # for testing purposes
-    print("url:", resp.url)
-    crawler_data.print_visited_pages()
-    
     return links
 
 def extract_next_links(url, resp, crawler_data):
@@ -63,6 +58,7 @@ def extract_next_links(url, resp, crawler_data):
         
         if is_valid(final_link, crawler_data):
             links.add(final_link)
+            
     return links
 
 def is_valid(url, crawler_data):
@@ -94,18 +90,14 @@ def is_valid(url, crawler_data):
             + r"|wav|avi|mov|mpeg|ram|m4v|mkv|ogg|ogv|pdf"
             + r"|ps|eps|tex|ppt|pptx|doc|docx|xls|xlsx|names"
             + r"|data|dat|exe|bz2|tar|msi|bin|7z|psd|dmg|iso"
-            + r"|epub|dll|cnf|tgz|sha1"
-            + r"|thmx|mso|arff|rtf|jar|csv"
+            + r"|epub|dll|cnf|tgz|sha1|img|war|apk"
+            + r"|thmx|mso|arff|rtf|jar|csv|lif"
             + r"|rm|smil|wmv|swf|wma|zip|rar|gz)$", parsed.path.lower()):
             return False
         
         # check for repeating directories
         # source:https://support.archive-it.org/hc/en-us/articles/208332963-Modify-your-crawl-scope-with-a-Regular-Expression
         if re.match(r"^.*?(\/.+?\/).*?\1.*$|^.*?\/(.+?\/)\2.*$", url.lower()):
-            return False
-        
-        # check if URL has been crawled
-        if crawler_data.visited_page(url):
             return False
         
         return True
