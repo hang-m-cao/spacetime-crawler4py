@@ -3,6 +3,7 @@ import nltk
 from urllib.parse import urlparse
 from collections import defaultdict, deque
 from simhash import Simhash
+import pickle 
 
 # nltk.download('punkt')
 
@@ -15,15 +16,11 @@ with open('stopwords.txt', 'r') as file:
 
 class Crawler_Data:
     def __init__(self):
-        self.visited_pages = set()
-        self.longest_page = ""
-        self.longest_num_words = 0
+        self.longest_page = ["", 0]
         self.words = defaultdict(int)
         self.subdomains = defaultdict(set)
         self.hash_queue = deque()
         
-    def visited_page(self, url):
-        return url in self.visited_pages
     
     def analyze(self, url, soup):
         ''' 
@@ -34,27 +31,42 @@ class Crawler_Data:
         
         hash_val = Simhash(soup.get_text()).value
         
+        # get queue from pickle
+        self.hash_queue = self.load_pickle('hash_queue.p', self.hash_queue)
+        
+        # calculate whether current doc is similar to previous 100 unique pages
         for hv in self.hash_queue:
+            
+            # if similar, don't consider page data in final report
             if self.calculate_similarity(hv, hash_val) >= 0.9:
-                print("reached here")
                 return False
         
+        # add url page to queue, keep queue at 100
         if len(self.hash_queue) >= 100:
             self.hash_queue.popleft()
         
         self.hash_queue.append(hash_val)
         
-        
-        # add to unique pages found
-        self.visited_pages.add(url)
+        # pickle/store hash queue
+        self.dump_pickle('hash_queue.p', self.hash_queue)
+            
         
         # tokenize the page
         text_tokens = nltk.tokenize.word_tokenize(soup.get_text())
         
+        # get longest page from pickle
+        self.longest_page = self.load_pickle('longest_page.p', self.longest_page)
+        
         # update longest page
-        if len(text_tokens) > self.longest_num_words:
-            self.longest_num_words = len(text_tokens)
-            self.longest_page = url
+        if len(text_tokens) > self.longest_page[1]:
+            self.longest_page[1] = len(text_tokens)
+            self.longest_page[0] = url
+            
+            self.dump_pickle('longest_page.p', self.longest_page)
+
+
+        # get dict of common words from pickle
+        self.words = self.load_pickle('words.p', self.words)
             
         # update word dictionary
         for token in text_tokens:
@@ -63,29 +75,54 @@ class Crawler_Data:
             # Find all the tokens within a word
             t = re.findall("[a-zA-Z0-9]+", token)
             for token in t:
-                if token not in STOPWORDS and len(token) > 1:
+                if token not in STOPWORDS and len(token) > 2:
                     # tokens.append(token)
                     self.words[token] += 1
             
+        # store words back using pickle
+        self.dump_pickle('words.p', self.words)
+
         # update ics.uci.edu subdomain count
         parsed = urlparse(url)
         
         if re.match(r"((.*\.)*ics\.uci\.edu.*)", parsed.netloc) and parsed.path:
+            # get subdomains from pickle
+            self.subdomains = self.load_pickle('subdomains.p', self.subdomains)
             self.subdomains[parsed.netloc].add(parsed.path)
-            
-        return True
+            self.dump_pickle('subdomains.p', self.subdomains)
         
-    def print_visited_pages(self):
-        print(f'unique pages: {len(self.visited_pages)}')
-        print(f'longest page: {self.longest_page}')
-        #print(self.words)
-        #sorted_words = sorted(self.words, key=lambda w: -self.words[w])[:50]
-        #print(f'sorted words: {sorted_words}\n')
-        #print(f'subdomains: {self.subdomains}\n')
-        subdomain_tuples = sorted([(key, len(self.subdomains[key])) for key in self.subdomains], key = lambda x : x)
-        print(f'tuples of subdomains and number: {subdomain_tuples}\n')
+        with open("data/finalLink.txt", "a") as f:
+            f.write(url + '\n')
+        return True
 
-    
+    def load_pickle(self, file_name, data_var):
+        try:
+            # open the pickle file and return the data
+            with open(f"data/{file_name}", 'rb') as file:
+                return pickle.load(file)
+        except:
+            # if there was an error (file not found), return the original data
+            return data_var
+
+    def dump_pickle(self, file_name, data_var):
+        with open(f'data/{file_name}', 'wb') as file:
+            pickle.dump(data_var, file)
+
+    def get_final_report(self):
+        self.longest_page = self.load_pickle('longest_page.p', self.longest_page)
+        print(f'longest page: {self.longest_page}\n')
+
+        self.words = self.load_pickle('words.p', self.words)
+        sorted_words = sorted(self.words, key=lambda w: -self.words[w])[:50]
+        print(f'sorted words: {sorted_words}\n')
+        
+        self.subdomains = self.load_pickle('subdomains.p', self.subdomains)
+        subdomains_sorted = sorted([(key, len(self.subdomains[key])) for key in self.subdomains], key = lambda x : x)
+        print(f'tuples of subdomains and number: {subdomains_sorted}\n')
+        
+        num_lines = sum(1 for line in open('data/finalLink.txt'))
+        print(f"unique pages: {num_lines}")
+
     # calculate similarity percentage between two given decimal numbers
     # based on how many bits they have in the same position
     def calculate_similarity(self, num1, num2):

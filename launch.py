@@ -7,17 +7,20 @@ from crawler import Crawler
 
 from crawler_data import Crawler_Data
 
-
 def main(config_file, restart):
     CRAWLER_DATA = Crawler_Data()
     
-    cparser = ConfigParser()
-    cparser.read(config_file)
-    config = Config(cparser)
-    config.cache_server = get_cache_server(config, restart)
-    crawler = Crawler(config, restart, CRAWLER_DATA)
-    crawler.start()
-    CRAWLER_DATA.print_visited_pages()
+    try:
+        cparser = ConfigParser()
+        cparser.read(config_file)
+        config = Config(cparser)
+        config.cache_server = get_cache_server(config, restart)
+        crawler = Crawler(config, restart, CRAWLER_DATA)
+        crawler.start()
+    except:
+        pass
+    
+    CRAWLER_DATA.get_final_report()
 
 
 if __name__ == "__main__":
