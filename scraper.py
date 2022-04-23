@@ -18,24 +18,39 @@ def extract_next_links(url, resp, crawler_data):
     #         resp.raw_response.content: the content of the page!
     # Return a list with the hyperlinks (as strings) scrapped from resp.raw_response.content
     
+    print(url)
+    
     if resp.status != 200 or resp.raw_response == None:
+        print("not 200 or no content")
         return []
+    
     parsed_url = urlparse(resp.url.strip())
     
     # get all links from html page using <a href>
     links = set()
     soup = BeautifulSoup(resp.raw_response.content, 'html.parser')
     
+    # for <meta name="robot"> content
+    # if content contains any in the set, don't scrap page
+    # source: https://www.contentkingapp.com/academy/meta-robots-tag/#noindex
+    for robot in soup.find_all("meta", {"name": "robots"}):
+        content = robot.get("content")
+        if (content and set(content.split(",")).issubset({'nofollow', 'noindex', 'noarchive', 'none'})):
+            print("told not to crawl")
+            return []
+    
     # analyze returns False if content is highly similar to previously crawled page
     if not crawler_data.analyze(url, soup):
+        print("highly similar")
         return []
-    
+
     for link in set(soup.find_all('a')):
 
         href = link.get('href')
         rel = link.get('rel')
         
-        if rel in ["nofollow", "canonical"]:
+        # href link is not authorized by source page
+        if rel == "nofollow":
             continue
         
         # eliminate '/' and fragments
@@ -58,14 +73,13 @@ def extract_next_links(url, resp, crawler_data):
         
         if is_valid(final_link, crawler_data):
             links.add(final_link)
-            
+
     return links
 
 def is_valid(url, crawler_data):
     # Decide whether to crawl this url or not. 
     # If you decide to crawl it, return True; otherwise return False.
     # There are already some conditions that return False.
-    
     try:
         parsed = urlparse(url)
         
@@ -92,7 +106,7 @@ def is_valid(url, crawler_data):
             + r"|data|dat|exe|bz2|tar|msi|bin|7z|psd|dmg|iso"
             + r"|epub|dll|cnf|tgz|sha1|img|war|apk"
             + r"|thmx|mso|arff|rtf|jar|csv|lif"
-            + r"|rm|smil|wmv|swf|wma|zip|rar|gz)$", parsed.path.lower()):
+            + r"|rm|smil|wmv|swf|wma|zip|rar|gz|m)$", parsed.path.lower()):
             return False
         
         # check for repeating directories
