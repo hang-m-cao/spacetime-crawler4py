@@ -10,7 +10,7 @@ def scraper(url, resp, crawler_data):
     print("url:", resp.url)
     crawler_data.print_visited_pages()
     
-    return links
+    return []
 
 def extract_next_links(url, resp, crawler_data):
     # Implementation required.
@@ -56,6 +56,11 @@ def extract_next_links(url, resp, crawler_data):
         
         if is_valid(final_link, crawler_data):
             links.add(final_link)
+            
+            f = open("finalLink.txt", "a")
+            f.write(final_link + '\n');
+            f.close()
+            
     return links
 
 def is_valid(url, crawler_data):
@@ -87,8 +92,8 @@ def is_valid(url, crawler_data):
             + r"|wav|avi|mov|mpeg|ram|m4v|mkv|ogg|ogv|pdf"
             + r"|ps|eps|tex|ppt|pptx|doc|docx|xls|xlsx|names"
             + r"|data|dat|exe|bz2|tar|msi|bin|7z|psd|dmg|iso"
-            + r"|epub|dll|cnf|tgz|sha1"
-            + r"|thmx|mso|arff|rtf|jar|csv"
+            + r"|epub|dll|cnf|tgz|sha1|img|war|apk"
+            + r"|thmx|mso|arff|rtf|jar|csv|lif"
             + r"|rm|smil|wmv|swf|wma|zip|rar|gz)$", parsed.path.lower()):
             return False
         
@@ -98,8 +103,8 @@ def is_valid(url, crawler_data):
             return False
         
         # check if URL has been crawled
-        if crawler_data.visited_page(url):
-            return False
+        # if crawler_data.visited_page(url):
+        #     return False
         
         return True
 

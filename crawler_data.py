@@ -3,6 +3,7 @@ import nltk
 from urllib.parse import urlparse
 from collections import defaultdict, deque
 from simhash import Simhash
+import pickle 
 
 # nltk.download('punkt')
 
@@ -15,15 +16,14 @@ with open('stopwords.txt', 'r') as file:
 
 class Crawler_Data:
     def __init__(self):
-        self.visited_pages = set()
-        self.longest_page = ""
-        self.longest_num_words = 0
+        #self.visited_pages = set()
+        self.longest_page = ["", 0]
         self.words = defaultdict(int)
         self.subdomains = defaultdict(set)
         self.hash_queue = deque()
         
-    def visited_page(self, url):
-        return url in self.visited_pages
+    #def visited_page(self, url):
+        #return url in self.visited_pages
     
     def analyze(self, url, soup):
         ''' 
@@ -34,22 +34,42 @@ class Crawler_Data:
         
         hash_val = Simhash(soup.get_text()).value
         
+        # get queue from pickle
+        try:
+            
+            with open('data/hash_queue.p', 'rb') as hash_file:
+                self.hash_queue = pickle.load(hash_file)
+        except:
+            pass
+        
+        # calculate whether current doc is similar to previous 100 unique pages
         for hv in self.hash_queue:
+            
+            # if similar, don't consider page data in final report
             if self.calculate_similarity(hv, hash_val) >= 0.9:
-                print("reached here")
                 return False
         
+        # add url page to queue, keep queue at 100
         if len(self.hash_queue) >= 100:
             self.hash_queue.popleft()
         
         self.hash_queue.append(hash_val)
         
-        
-        # add to unique pages found
-        self.visited_pages.add(url)
+        # pickle/store hash queue
+        with open('data/hash_queue.p', 'wb') as hash_file:
+            pickle.dump(self.hash_queue, hash_file)
+            
         
         # tokenize the page
         text_tokens = nltk.tokenize.word_tokenize(soup.get_text())
+        
+        # get longest page from pickle
+        try:
+            
+            with open('data/hash_queue.p', 'rb') as hash_file:
+                self.hash_queue = pickle.load(hash_file)
+        except:
+            pass
         
         # update longest page
         if len(text_tokens) > self.longest_num_words:
@@ -76,7 +96,7 @@ class Crawler_Data:
         return True
         
     def print_visited_pages(self):
-        print(f'unique pages: {len(self.visited_pages)}')
+        #print(f'unique pages: {len(self.visited_pages)}')
         print(f'longest page: {self.longest_page}')
         #print(self.words)
         #sorted_words = sorted(self.words, key=lambda w: -self.words[w])[:50]
