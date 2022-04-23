@@ -3,7 +3,7 @@ from crawler_data import Crawler_Data
 from urllib.parse import urlparse, urljoin
 from bs4 import BeautifulSoup
 
-def scraper(url, resp, crawler_data):
+def scraper(url, resp):
     links = extract_next_links(url, resp, crawler_data)
     
     # for testing purposes

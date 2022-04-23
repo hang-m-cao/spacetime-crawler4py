@@ -32,7 +32,7 @@ class Crawler_Data:
         hash_val = Simhash(soup.get_text()).value
         
         # get queue from pickle
-        self.load_pickle('hash_queue.p', self.hash_queue)
+        self.hash_queue = self.load_pickle('hash_queue.p', self.hash_queue)
         
         # calculate whether current doc is similar to previous 100 unique pages
         for hv in self.hash_queue:
@@ -48,27 +48,25 @@ class Crawler_Data:
         self.hash_queue.append(hash_val)
         
         # pickle/store hash queue
-        with open('data/hash_queue.p', 'wb') as hash_file:
-            pickle.dump(self.hash_queue, hash_file)
+        self.dump_pickle('hash_queue.p', self.hash_queue)
             
         
         # tokenize the page
         text_tokens = nltk.tokenize.word_tokenize(soup.get_text())
         
         # get longest page from pickle
-        self.load_pickle('longest_page.p', self.longest_page)
+        self.longest_page = self.load_pickle('longest_page.p', self.longest_page)
         
         # update longest page
         if len(text_tokens) > self.longest_page[1]:
             self.longest_page[1] = len(text_tokens)
             self.longest_page[0] = url
             
-            with open('data/longest_page.p', 'wb') as long_page_file:
-                pickle.dump(self.longest_page, long_page_file)
+            self.dump_pickle('longest_page.p', self.longest_page)
 
 
         # get dict of common words from pickle
-        self.load_pickle('words.p', self.words)
+        self.words = self.load_pickle('words.p', self.words)
             
         # update word dictionary
         for token in text_tokens:
@@ -82,51 +80,44 @@ class Crawler_Data:
                     self.words[token] += 1
             
         # store words back using pickle
-        with open('data/words.p', 'wb') as common_words:
-            pickle.dump(self.words, common_words)
-
+        self.dump_pickle('words.p', self.words)
 
         # update ics.uci.edu subdomain count
         parsed = urlparse(url)
         
         if re.match(r"((.*\.)*ics\.uci\.edu.*)", parsed.netloc) and parsed.path:
             # get subdomains from pickle
-            self.load_pickle('subdomains.p', self.subdomains)
-            
+            self.subdomains = self.load_pickle('subdomains.p', self.subdomains)
             self.subdomains[parsed.netloc].add(parsed.path)
-
-            with open('data/subdomains.p', 'wb') as subdomain_page:
-                pickle.dump(self.subdomains, subdomain_page)
+            self.dump_pickle('subdomains.p', self.subdomains)
             
         return True
-        
-    def test_subdomain(self):
-        print(self.subdomain)
-
-        with open('data/subdomains.p', 'wb') as subdomain_page:
-            pickle.dump({'1', '2', '3'}, subdomain_page)
-
-        self.load_pickle('subdomains.p', self.subdomains)
-        print(self.subdomains)
 
     def load_pickle(self, file_name, data_var):
         try:
+            # open the pickle file and return the data
             with open(f"data/{file_name}", 'rb') as file:
-                data_var = pickle.load(file)
+                return pickle.load(file)
         except:
-            pass
+            # if there was an error (file not found), return the original data
+            return data_var
+
+    def dump_pickle(self, file_name, data_var):
+        with open(f'data/{file_name}', 'wb') as file:
+            pickle.dump(data_var, file)
 
     def get_final_report(self):
-        #print(f'unique pages: {len(self.visited_pages)}')
-        print(f'longest page: {self.longest_page}')
-        #print(self.words)
-        #sorted_words = sorted(self.words, key=lambda w: -self.words[w])[:50]
-        #print(f'sorted words: {sorted_words}\n')
-        #print(f'subdomains: {self.subdomains}\n')
-        subdomain_tuples = sorted([(key, len(self.subdomains[key])) for key in self.subdomains], key = lambda x : x)
-        print(f'tuples of subdomains and number: {subdomain_tuples}\n')
+        self.longest_page = self.load_pickle('longest_page.p', self.longest_page)
+        print(f'longest page: {self.longest_page}\n')
 
-    
+        self.words = self.load_pickle('words.p', self.words)
+        sorted_words = sorted(self.words, key=lambda w: -self.words[w])[:50]
+        print(f'sorted words: {sorted_words}\n')
+        
+        self.subdomains = self.load_pickle('subdomains.p', self.subdomains)
+        subdomains_sorted = sorted([(key, len(self.subdomains[key])) for key in self.subdomains], key = lambda x : x)
+        print(f'tuples of subdomains and number: {subdomains_sorted}\n')
+
     # calculate similarity percentage between two given decimal numbers
     # based on how many bits they have in the same position
     def calculate_similarity(self, num1, num2):
