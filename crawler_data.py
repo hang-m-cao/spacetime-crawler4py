@@ -117,6 +117,9 @@ class Crawler_Data:
         self.subdomains = self.load_pickle('subdomains.p', self.subdomains)
         subdomains_sorted = sorted([(key, len(self.subdomains[key])) for key in self.subdomains], key = lambda x : x)
         print(f'tuples of subdomains and number: {subdomains_sorted}\n')
+        
+        num_lines = sum(1 for line in open('finalLink.txt'))
+        print(f"unique pages: {num_lines}")
 
     # calculate similarity percentage between two given decimal numbers
     # based on how many bits they have in the same position

@@ -3,14 +3,9 @@ from crawler_data import Crawler_Data
 from urllib.parse import urlparse, urljoin
 from bs4 import BeautifulSoup
 
-def scraper(url, resp):
+def scraper(url, resp, crawler_data):
     links = extract_next_links(url, resp, crawler_data)
-    
-    # for testing purposes
-    print("url:", resp.url)
-    crawler_data.print_visited_pages()
-    
-    return []
+    return links
 
 def extract_next_links(url, resp, crawler_data):
     # Implementation required.
@@ -57,9 +52,8 @@ def extract_next_links(url, resp, crawler_data):
         if is_valid(final_link, crawler_data):
             links.add(final_link)
             
-            f = open("finalLink.txt", "a")
-            f.write(final_link + '\n');
-            f.close()
+            with open("finalLink.txt", "a") as f:
+                f.write(final_link + '\n');
             
     return links
 
@@ -101,10 +95,6 @@ def is_valid(url, crawler_data):
         # source:https://support.archive-it.org/hc/en-us/articles/208332963-Modify-your-crawl-scope-with-a-Regular-Expression
         if re.match(r"^.*?(\/.+?\/).*?\1.*$|^.*?\/(.+?\/)\2.*$", url.lower()):
             return False
-        
-        # check if URL has been crawled
-        # if crawler_data.visited_page(url):
-        #     return False
         
         return True
 
