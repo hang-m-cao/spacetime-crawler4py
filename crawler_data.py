@@ -90,7 +90,9 @@ class Crawler_Data:
             self.subdomains = self.load_pickle('subdomains.p', self.subdomains)
             self.subdomains[parsed.netloc].add(parsed.path)
             self.dump_pickle('subdomains.p', self.subdomains)
-            
+        
+        with open("data/finalLink.txt", "a") as f:
+            f.write(url + '\n')
         return True
 
     def load_pickle(self, file_name, data_var):
@@ -118,7 +120,7 @@ class Crawler_Data:
         subdomains_sorted = sorted([(key, len(self.subdomains[key])) for key in self.subdomains], key = lambda x : x)
         print(f'tuples of subdomains and number: {subdomains_sorted}\n')
         
-        num_lines = sum(1 for line in open('finalLink.txt'))
+        num_lines = sum(1 for line in open('data/finalLink.txt'))
         print(f"unique pages: {num_lines}")
 
     # calculate similarity percentage between two given decimal numbers

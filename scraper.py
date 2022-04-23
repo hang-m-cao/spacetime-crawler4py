@@ -52,9 +52,6 @@ def extract_next_links(url, resp, crawler_data):
         if is_valid(final_link, crawler_data):
             links.add(final_link)
             
-            with open("finalLink.txt", "a") as f:
-                f.write(final_link + '\n');
-            
     return links
 
 def is_valid(url, crawler_data):
