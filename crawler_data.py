@@ -34,6 +34,9 @@ class Crawler_Data:
         
         hash_val = Simhash(soup.get_text()).value
         
+        print(hash_val)
+        #1011011111101100000111111110100111011000110101000001000001000, 1656625361583768072
+        #1011011111101100000111111110100111011000110101000001000011000, 1656625361583768088
         for hv in self.hash_queue:
             if self.calculate_similarity(hv, hash_val) >= 0.9:
                 print("reached here")
@@ -51,10 +54,19 @@ class Crawler_Data:
         # tokenize the page
         text_tokens = nltk.tokenize.word_tokenize(soup.get_text())
         
+        text_length = len(text_tokens) 
+        
+        # check content length if too big or too small skip
+        if text_length > 1000 or text_length < 20:
+            return False
+        
         # update longest page
-        if len(text_tokens) > self.longest_num_words:
+        if text_length > self.longest_num_words:
             self.longest_num_words = len(text_tokens)
             self.longest_page = url
+            print(self.longest_num_words)
+            
+        
             
         # update word dictionary
         for token in text_tokens:
@@ -73,30 +85,35 @@ class Crawler_Data:
         if re.match(r"((.*\.)*ics\.uci\.edu.*)", parsed.netloc) and parsed.path:
             self.subdomains[parsed.netloc].add(parsed.path)
             
+            
         return True
         
+    
     def print_visited_pages(self):
         print(f'unique pages: {len(self.visited_pages)}')
+        
         print(f'longest page: {self.longest_page}')
         #print(self.words)
         #sorted_words = sorted(self.words, key=lambda w: -self.words[w])[:50]
         #print(f'sorted words: {sorted_words}\n')
         #print(f'subdomains: {self.subdomains}\n')
-        subdomain_tuples = sorted([(key, len(self.subdomains[key])) for key in self.subdomains], key = lambda x : x)
-        print(f'tuples of subdomains and number: {subdomain_tuples}\n')
-
-    
-    # calculate similarity percentage between two given decimal numbers
-    # based on how many bits they have in the same position
-    def calculate_similarity(self, num1, num2):
-        # total number of bits
-        n = 0 
-        # count of bits in the same position
-        count = 0 
         
+        #============I added here
+        subdomain_tuples = sorted([(key, len(self.subdomains[key])) for key in self.subdomains], key = lambda x : x)
+        
+        print(f'tuples of subdomains and number: {subdomain_tuples}\n')
+    
+        
+        
+        
+    def calculate_similarity(self, num1, num2):
+        #calculate similarity percentage
+        
+        n = 0
+        count = 0
         while (num1 or num2):
-            # if both ends are equal to each other
-            # &1 returns a 1 if the last bit is 1 and returns 0 if last bit is 0
+            #if both ends are equal to each other
+            #&1 returns a 1 if the last bit is 1 and returns 0 if last bit is 0
             if num1&1 == num2&1:
                 count += 1
             num1 >>= 1

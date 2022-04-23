@@ -37,7 +37,11 @@ def extract_next_links(url, resp, crawler_data):
     
     for link in set(soup.find_all('a')):
 
-        href = link.get('href')  
+        href = link.get('href')
+        rel = link.get('rel')
+        
+        if rel == "nofollow" or rel == "canonical":
+            continue
         
         # eliminate '/' and fragments
         if (not href or len(href) <= 1 or href[0] == '#'):
