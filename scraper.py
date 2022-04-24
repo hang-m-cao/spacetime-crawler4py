@@ -43,7 +43,7 @@ def extract_next_links(url, resp, crawler_data):
     
     # analyze returns False if content is highly similar to previously crawled page
     if not crawler_data.analyze(url, soup):
-        print("highly similar")
+        print("highly similar or content length issue")
         return []
 
     for link in set(soup.find_all('a')):
@@ -132,17 +132,24 @@ def is_valid(url):
             pass
         
         if not parsed.netloc in robot_parsers:
-            rp = RobotFileParser()
-            rp.set_url(f"{parsed.scheme}://{parsed.netloc}/robots.txt")
-            rp.read()
-            
-            robot_parsers[parsed.netloc] = rp
+            try:
+                rp = RobotFileParser()
+                rp.set_url(f"{parsed.scheme}://{parsed.netloc}/robots.txt")
+                rp.read()
+
+                robot_parsers[parsed.netloc] = rp
+            except:
+                print("there was an error reading for:", url)
+                robot_parsers[parsed.netloc] = None
             
             # dump data to pickle file
             with open(robot_pickle, 'wb') as file:
                 pickle.dump(robot_parsers, file)
         
-        return robot_parsers[parsed.netloc].can_fetch("*", url)
+        parser = robot_parsers[parsed.netloc]
+        if parser:
+            return parser.can_fetch("*", url)
+        return True
         
     except TypeError:
         print ("TypeError for ", parsed)
