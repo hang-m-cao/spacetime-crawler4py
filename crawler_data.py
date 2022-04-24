@@ -58,7 +58,7 @@ class Crawler_Data:
         text_length = len(text_tokens) 
         
         # check content length if too big or too small skip
-        if text_length > 8000 or text_length < 150:
+        if text_length > 8000 or text_length < 200:
             return False
          
         # get longest page from pickle

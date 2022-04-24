@@ -90,7 +90,7 @@ def is_valid(url):
         
         # invalid if url has any of specified query or a query parameter with no value
         if re.match(r"&?(ical=|share=|api=|replytocom=)"
-                    + r"|(&?(.+)=)$ | (&?(.+)=)&(.*)$", parsed.query):
+                    + r"|(&?(.+)=)$|(&?(.+)=)&(.*)$", parsed.query):
             return False
         
         # check if within allowed domains
