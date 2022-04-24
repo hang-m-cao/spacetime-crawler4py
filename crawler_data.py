@@ -20,7 +20,6 @@ class Crawler_Data:
         self.words = defaultdict(int)
         self.subdomains = defaultdict(set)
         self.hash_queue = deque()
-        
     
     def analyze(self, url, soup):
         ''' 
@@ -59,7 +58,7 @@ class Crawler_Data:
         text_length = len(text_tokens) 
         
         # check content length if too big or too small skip
-        if text_length > 1000 or text_length < 20:
+        if text_length > 8000 or text_length < 150:
             return False
          
         # get longest page from pickle
@@ -117,7 +116,12 @@ class Crawler_Data:
         with open(f'data/{file_name}', 'wb') as file:
             pickle.dump(data_var, file)
 
+    # print longest page url, length of page
+    # 50 most common words
+    # subdomains of ics.uci.edu and how many unique pages found
+    # the number of unique pages found
     def get_final_report(self):
+        print()
         self.longest_page = self.load_pickle('longest_page.p', self.longest_page)
         print(f'longest page: {self.longest_page}\n')
 
@@ -129,12 +133,11 @@ class Crawler_Data:
         subdomains_sorted = sorted([(key, len(self.subdomains[key])) for key in self.subdomains], key = lambda x : x)
         print(f'tuples of subdomains and number: {subdomains_sorted}\n')
         
-        num_lines = sum(1 for line in open('data/finalLink.txt'))
-        print(f"unique pages: {num_lines}")
+        num_lines = sum(1 for line in open('data/finalLink.txt', 'r'))
+        print(f"unique pages: {num_lines}\n")
 
     # calculate similarity percentage between two given decimal numbers
     # based on how many bits they have in the same position
-
     def calculate_similarity(self, num1, num2):
         #calculate similarity percentage
         

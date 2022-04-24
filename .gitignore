@@ -112,4 +112,4 @@ venv.bak/
 # saved results from crawls
 results/
 data/
-./finalLink.txt
+tests/
