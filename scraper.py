@@ -2,6 +2,8 @@ import re
 from crawler_data import Crawler_Data
 from urllib.parse import urlparse, urljoin
 from bs4 import BeautifulSoup
+from urllib.robotparser import RobotFileParser
+import pickle 
 
 def scraper(url, resp, crawler_data):
     links = extract_next_links(url, resp, crawler_data)
@@ -71,22 +73,24 @@ def extract_next_links(url, resp, crawler_data):
         # remove fragments if any
         final_link = urlparse(abs_link)._replace(fragment="").geturl()
         
-        if is_valid(final_link, crawler_data):
+        if is_valid(final_link):
             links.add(final_link)
-
+  
     return links
 
-def is_valid(url, crawler_data):
+def is_valid(url):
     # Decide whether to crawl this url or not. 
     # If you decide to crawl it, return True; otherwise return False.
     # There are already some conditions that return False.
     try:
         parsed = urlparse(url)
         
-        if re.match(r"&?(ical=|share=|api=|replytocom=)", parsed.query):
+        if parsed.scheme not in set(["http", "https"]):
             return False
         
-        if parsed.scheme not in set(["http", "https"]):
+        # invalid if url has any of specified query or a query parameter with no value
+        if re.match(r"&?(ical=|share=|api=|replytocom=)"
+                    + r"|(&?(.+)=)$ | (&?(.+)=)&(.*)$", parsed.query):
             return False
         
         # check if within allowed domains
@@ -98,6 +102,7 @@ def is_valid(url, crawler_data):
                        parsed.netloc + parsed.path):
             return False
         
+        # file types to ignore
         if re.match(
             r".*\.(css|js|bmp|gif|jpe?g|ico|img|war"
             + r"|png|tiff?|mid|mp2|mp3|mp4|mpg"
@@ -114,8 +119,32 @@ def is_valid(url, crawler_data):
         if re.match(r"^.*?(\/.+?\/).*?\1.*$|^.*?\/(.+?\/)\2.*$", url.lower()):
             return False
         
-        return True
-
+        # checking robots.txt to see if allowed to crawl url
+        # open pickle file to check if domain has a parser
+        robot_pickle = "data/robots.p"
+        robot_parsers = {}
+        try:
+            # open the pickle file and return the data
+            with open(robot_pickle, 'rb') as file:
+                robot_parsers = pickle.load(file)
+        except:
+            # has not made robot parser file
+            pass
+        
+        if not parsed.netloc in robot_parsers:
+            rp = RobotFileParser()
+            rp.set_url(f"{parsed.scheme}://{parsed.netloc}/robots.txt")
+            rp.read()
+            
+            robot_parsers[parsed.netloc] = rp
+            
+            # dump data to pickle file
+            with open(robot_pickle, 'wb') as file:
+                pickle.dump(robot_parsers, file)
+        
+        return robot_parsers[parsed.netloc].can_fetch("*", url)
+        
     except TypeError:
         print ("TypeError for ", parsed)
         raise
+
