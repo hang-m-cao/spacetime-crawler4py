@@ -37,7 +37,8 @@ def extract_next_links(url, resp, crawler_data):
     # source: https://www.contentkingapp.com/academy/meta-robots-tag/#noindex
     for robot in soup.find_all("meta", {"name": "robots"}):
         content = robot.get("content")
-        if (content and set(content.split(",")).issubset({'nofollow', 'noindex', 'noarchive', 'none'})):
+        # if there are specified keywords and those keywords are nofollow, noindex, and/nor none, do not index page
+        if (content and len(set(re.split(',|, ', content)).intersection({'nofollow', 'noindex', 'none'})) > 0):
             print("told not to crawl")
             return []
     
@@ -88,11 +89,6 @@ def is_valid(url):
         if parsed.scheme not in set(["http", "https"]):
             return False
         
-        # invalid if url has any of specified query or a query parameter with no value
-        if re.match(r"&?(ical=|share=|api=|replytocom=)"
-                    + r"|(&?(.+)=)$|(&?(.+)=)&(.*)$", parsed.query):
-            return False
-        
         # check if within allowed domains
         if not re.match(r"((.*\.)*ics\.uci\.edu.*)|"
                         + r"((.*\.)*cs\.uci\.edu.*)|"
@@ -100,6 +96,11 @@ def is_valid(url):
                         + r"((.*\.)*stat\.uci\.edu.*)|" 
                         + r"(today\.uci\.edu\/department\/information_computer_sciences\/.*)",
                        parsed.netloc + parsed.path):
+            return False
+        
+        # invalid if url has any of specified query or a query parameter with no value
+        if re.match(r"&?(ical=|share=|api=|replytocom=)"
+                    + r"|(&?(.+)=)$|(&?(.+)=)&(.*)$", parsed.query):
             return False
         
         # file types to ignore
@@ -111,7 +112,8 @@ def is_valid(url):
             + r"|data|dat|exe|bz2|tar|msi|bin|7z|psd|dmg|iso"
             + r"|epub|dll|cnf|tgz|sha1|img|war|apk"
             + r"|thmx|mso|arff|rtf|jar|csv|lif"
-            + r"|rm|smil|wmv|swf|wma|zip|rar|gz|m|bam|ppsx)$", parsed.path.lower()):
+            + r"|rm|smil|wmv|swf|wma|zip|rar|gz"
+            + r"|m|bam|ppsx|pps|odc)$", parsed.path.lower()):
             return False
         
         # check for repeating directories
