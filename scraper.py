@@ -43,8 +43,9 @@ def extract_next_links(url, resp, crawler_data):
         canonical = soup.head.find("link", {"rel": "canonical"})
         if canonical:
             canonical_href = canonical.get('href')
-            canonical_link = parse_href(url, canonical_href, links)
-            return links 
+            if parse_href(url, canonical_href, links)
+                print('go to canonical:', canonical_href)
+                return links 
     
     # for <meta name="robot"> content
     # if content contains any in the set, don't scrap page
@@ -70,7 +71,7 @@ def extract_next_links(url, resp, crawler_data):
         if rel == "nofollow":
             continue
         
-        final_link = parse_href(url, href, links)
+        parse_href(url, href, links)
   
     return links
 
@@ -79,7 +80,7 @@ def parse_href(url, href, links):
     Given href from <a>, add the absolute link defragmented to set of links
     Returns if there is no href, it is a mailto link or has fragments
     '''
-    # eliminate '/' and fragments
+    # eliminate null, mailto, and fragments
     if (not href or href.startswith('mailto') or href[0] == '#'):
         return
 
@@ -92,6 +93,8 @@ def parse_href(url, href, links):
    
     if final_link and is_valid(final_link):
         links.add(final_link)
+        return True
+    return False
 
 
 def is_valid(url):
