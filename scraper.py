@@ -43,7 +43,7 @@ def extract_next_links(url, resp, crawler_data):
         canonical = soup.head.find("link", {"rel": "canonical"})
         if canonical:
             canonical_href = canonical.get('href')
-            if parse_href(url, canonical_href, links)
+            if parse_href(url, canonical_href, links):
                 print('go to canonical:', canonical_href)
                 return links 
     
