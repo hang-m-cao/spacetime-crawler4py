@@ -82,7 +82,7 @@ def parse_href(url, href, links):
     '''
     # eliminate null, mailto, and fragments
     if (not href or href.startswith('mailto') or href[0] == '#'):
-        return
+        return False
 
     # join to convert to absolute
     # determine if link is relative (attach current URL) or absolute (leave as is)
