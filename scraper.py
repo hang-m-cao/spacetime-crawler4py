@@ -42,9 +42,10 @@ def extract_next_links(url, resp, crawler_data):
     if soup.head:
         canonical = soup.head.find("link", {"rel": "canonical"})
         if canonical:
+            print('found canonical', canonical_href)
             canonical_href = canonical.get('href')
             if parse_href(url, canonical_href, links):
-                print('go to canonical:', canonical_href)
+                print('go to canonical')
                 return links 
     
     # for <meta name="robot"> content
@@ -91,11 +92,10 @@ def parse_href(url, href, links):
     # remove fragments if any
     final_link = urlparse(abs_link)._replace(fragment="").geturl()
    
-    if final_link and is_valid(final_link):
+    if final_link and final_link != url and is_valid(final_link):
         links.add(final_link)
         return True
     return False
-
 
 def is_valid(url):
     '''
@@ -134,7 +134,7 @@ def is_valid(url):
             + r"|epub|dll|cnf|tgz|sha1|img|war|apk"
             + r"|thmx|mso|arff|rtf|jar|csv|lif"
             + r"|rm|smil|wmv|swf|wma|zip|rar|gz"
-            + r"|m|bam|ppsx|pps|odc)$", parsed.path.lower()):
+            + r"|m|bam|ppsx|pps|odc|odp)$", parsed.path.lower()):
             return False
         
         # check for repeating directories
