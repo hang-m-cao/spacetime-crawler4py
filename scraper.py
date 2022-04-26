@@ -10,7 +10,6 @@ def scraper(url, resp, crawler_data):
     return links
 
 def extract_next_links(url, resp, crawler_data):
-    # Implementation required.
     # url: the URL that was used to get the page
     # resp.url: the actual url of the page
     # resp.status: the status code returned by the server. 200 is OK, you got the page. Other numbers mean that there was some kind of problem.
@@ -28,9 +27,25 @@ def extract_next_links(url, resp, crawler_data):
     
     parsed_url = urlparse(resp.url.strip())
     
+    # for later joining url and href
+    # Determines if we should be looking for a file in the current directory or add on to the directory
+    if "." not in parsed_url.path and url[-1] != '/':
+        url += '/'
+    
     # get all links from html page using <a href>
     links = set()
     soup = BeautifulSoup(resp.raw_response.content, 'html.parser')
+    
+    # checking of site has a canonical/preferred link in the head of the document
+    # if it does, don't index current site and add canonical link if valid
+    # returns links to stop furthering
+    if soup.head:
+        canonical = soup.head.find("link", {"rel": "canonical"})
+        if canonical:
+            canonical_href = canonical.get('href')
+            if parse_href(url, canonical_href, links):
+                print('go to canonical:', canonical_href)
+                return links 
     
     # for <meta name="robot"> content
     # if content contains any in the set, don't scrap page
@@ -41,7 +56,7 @@ def extract_next_links(url, resp, crawler_data):
         if (content and len(set(re.split(',|, ', content)).intersection({'nofollow', 'noindex', 'none'})) > 0):
             print("told not to crawl")
             return []
-    
+            
     # analyze returns False if content is highly similar to previously crawled page
     if not crawler_data.analyze(url, soup):
         print("highly similar or content length issue")
@@ -56,33 +71,39 @@ def extract_next_links(url, resp, crawler_data):
         if rel == "nofollow":
             continue
         
-        # eliminate '/' and fragments
-        if (not href or len(href) <= 1 or href[0] == '#'):
-            continue
-            
-        if (href.startswith('mailto')):
-            continue
-            
-        # Determines if we should be looking for a file in the current directory or add on to the directory
-        if "." not in parsed_url.path and url[-1] != '/':
-            url += '/'
-        
-        # join to convert to absolute
-        # determine if link is relative (attach current URL) or absolute (leave as is)
-        abs_link = urljoin(url, href)
-        
-        # remove fragments if any
-        final_link = urlparse(abs_link)._replace(fragment="").geturl()
-        
-        if is_valid(final_link):
-            links.add(final_link)
+        parse_href(url, href, links)
   
     return links
 
+def parse_href(url, href, links):
+    '''
+    Given href from <a>, add the absolute link defragmented to set of links
+    Returns if there is no href, it is a mailto link or has fragments
+    '''
+    # eliminate null, mailto, and fragments
+    if (not href or href.startswith('mailto') or href[0] == '#'):
+        return False
+
+    # join to convert to absolute
+    # determine if link is relative (attach current URL) or absolute (leave as is)
+    abs_link = urljoin(url, href)
+    
+    # remove fragments if any
+    final_link = urlparse(abs_link)._replace(fragment="").geturl()
+   
+    if final_link and is_valid(final_link):
+        links.add(final_link)
+        return True
+    return False
+
+
 def is_valid(url):
-    # Decide whether to crawl this url or not. 
-    # If you decide to crawl it, return True; otherwise return False.
-    # There are already some conditions that return False.
+    '''
+    Decide whether to crawl this url or not. 
+    Return True is URL can be crawled
+    Checks scheme, domain, queries, and file extensions.
+    Also checks for traps (repeating directories or not allowed by robots.txt)
+    '''
     try:
         parsed = urlparse(url)
         
