@@ -113,7 +113,7 @@ def is_valid(url):
             + r"|epub|dll|cnf|tgz|sha1|img|war|apk"
             + r"|thmx|mso|arff|rtf|jar|csv|lif"
             + r"|rm|smil|wmv|swf|wma|zip|rar|gz"
-            + r"|m|bam|ppsx|pps|odc)$", parsed.path.lower()):
+            + r"|m|bam|ppsx|pps|odc|odp)$", parsed.path.lower()):
             return False
         
         # check for repeating directories
