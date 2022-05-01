@@ -113,3 +113,4 @@ venv.bak/
 results/
 data/
 tests/
+*.zip
